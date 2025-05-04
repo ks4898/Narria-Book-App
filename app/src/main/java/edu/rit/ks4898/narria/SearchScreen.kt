@@ -86,7 +86,7 @@ fun SearchScreen(navController: NavHostController, modifier: Modifier = Modifier
                         }
                     }
                 },
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 12.dp)
             ) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
             }

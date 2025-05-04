@@ -1,5 +1,6 @@
 package edu.rit.ks4898.narria
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
@@ -24,7 +26,10 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.height(92.dp)
+            ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
@@ -38,14 +43,20 @@ fun MainScreen(
                                 "profile" -> Icon(Icons.Default.Person, contentDescription = null)
                             }
                         },
-                        label = { Text(screen.replaceFirstChar { it.uppercase() }) },
+                        label = {
+                            Text(
+                                screen.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
                         selected = selectedItem == screen,
                         onClick = {
                             selectedItem = screen
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = Color.Gray
+                            unselectedIconColor = Color.Gray,
+                            indicatorColor = Color.Transparent
                         )
                     )
                 }
