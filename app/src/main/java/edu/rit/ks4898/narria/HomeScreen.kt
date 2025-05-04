@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -81,11 +82,14 @@ private fun CategorySection(
     navController: NavHostController
 ) {
     Text(title, style = MaterialTheme.typography.titleLarge)
+
     if (books.isEmpty()) {
-        Text(
-            text = "No books in this category",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(vertical = 8.dp)
+        EmptyState(
+            message = "No books in this category",
+            icon = Icons.Default.Bookmarks,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
         )
     } else {
         LazyRow {
@@ -96,8 +100,10 @@ private fun CategorySection(
             }
         }
     }
+
     Spacer(Modifier.height(16.dp))
 }
+
 
 // ---------- BookCard (unchanged) ----------
 @Composable
