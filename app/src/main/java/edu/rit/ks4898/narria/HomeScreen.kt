@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -91,20 +93,29 @@ private fun CategorySection(
     } else {
         LazyRow {
             items(books) { book ->
-                BookCard(book) {
-                    navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
-                }
+                BookCard(
+                    book = book,
+                    onClick = {
+                        navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
+                    },
+                    onRemove = {
+                        removeBook(book)
+                    }
+                )
             }
+
         }
     }
 
     Spacer(Modifier.height(16.dp))
 }
 
-
-// ---------- BookCard (unchanged) ----------
 @Composable
-fun BookCard(book: Book, onClick: () -> Unit) {
+fun BookCard(
+    book: Book,
+    onClick: () -> Unit,
+    onRemove: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -112,34 +123,65 @@ fun BookCard(book: Book, onClick: () -> Unit) {
             .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
-            BookCover(
-                coverUrl = book.coverUrl,
-                modifier = Modifier
-                    .height(160.dp)
-                    .fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(book.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            Text(book.author, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-
-            Row {
-                StarRating(book.rating)
-            }
-            if (book.isFavorite) {
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = "Favorite",
-                    tint = Color.Yellow,
+        Box {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                BookCover(
+                    coverUrl = book.coverUrl,
                     modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(4.dp)
+                        .height(160.dp)
+                        .fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(book.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+                Text(book.author, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+
+                StarRating(rating = book.rating, starSize = 16.dp)
+
+                if (book.isFavorite) {
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = "Favorite",
+                        tint = Color.Red,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(4.dp)
+                    )
+                }
+            }
+
+            // ───────────────────────────────────────────────────
+            // NEW: X REMOVE BUTTON (TOP RIGHT)
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove Book",
+                    tint = Color.Gray
                 )
             }
+            // ───────────────────────────────────────────────────
         }
     }
 }
+
+private fun removeBook(book: Book) {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    FirebaseFirestore.getInstance()
+        .collection("users")
+        .document(userId)
+        .collection("books")
+        .document(book.id)
+        .delete()
+}
+
