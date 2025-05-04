@@ -84,12 +84,9 @@ private fun CategorySection(
     Text(title, style = MaterialTheme.typography.titleLarge)
 
     if (books.isEmpty()) {
-        EmptyState(
+        InlineEmptyState(
             message = "No books in this category",
-            icon = Icons.Default.Bookmarks,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+            icon = Icons.Default.Bookmarks
         )
     } else {
         LazyRow {
