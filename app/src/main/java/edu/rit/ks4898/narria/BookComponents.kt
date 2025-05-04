@@ -139,9 +139,8 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                         Text(text = currentBook.title, style = MaterialTheme.typography.headlineSmall)
                         Text(text = currentBook.author, style = MaterialTheme.typography.titleMedium)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StarRating(currentBook.rating, starSize = 20.dp)
+                            StarRating(currentBook.rating, starSize = 32.dp)
                             Spacer(Modifier.width(8.dp))
-                            Text(String.format("%.1f / 5.0", currentBook.rating))
                         }
 
                     }
@@ -204,7 +203,7 @@ fun shareBook(context: Context, book: Book) {
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_SUBJECT, "Check out this book: ${book.title}")
-        putExtra(Intent.EXTRA_TEXT, "I'm reading ${book.title}. It's rated ${book.rating}/5!")
+        putExtra(Intent.EXTRA_TEXT, "I'm reading ${book.title}. It's rated ${String.format("%.0f", book.rating)}/5!")
     }
     context.startActivity(Intent.createChooser(shareIntent, "Share via"))
 }

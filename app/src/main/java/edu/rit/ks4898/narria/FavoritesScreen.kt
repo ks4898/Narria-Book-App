@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -17,6 +18,7 @@ import com.google.firebase.ktx.Firebase
 @Composable
 fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     var favoriteBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) } // ✅ NEW loading state
 
     // ───────────────── Listen for favourite changes ─────────────────
     LaunchedEffect(Unit) {
@@ -30,7 +32,11 @@ fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modif
                     favoriteBooks = snap?.documents?.mapNotNull { d ->
                         d.toObject(Book::class.java)?.copy(id = d.id)
                     } ?: emptyList()
+
+                    isLoading = false  // ✅ Set loading complete
                 }
+        } ?: run {
+            isLoading = false // ✅ No user, stop loading
         }
     }
 
@@ -43,16 +49,26 @@ fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modif
         Text("Favorite Books", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
-        if (favoriteBooks.isEmpty()) {
-            EmptyState(
-                message = "You haven't marked any books as favorites yet.",
-                icon    = Icons.Filled.Favorite
-            )
-        } else {
-            LazyColumn {
-                items(favoriteBooks) { book ->
-                    BookListItem(book) {
-                        navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
+        when {
+            isLoading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            favoriteBooks.isEmpty() -> {
+                EmptyState(
+                    message = "You haven't marked any books as favorites yet.",
+                    icon = Icons.Filled.Favorite
+                )
+            }
+
+            else -> {
+                LazyColumn {
+                    items(favoriteBooks) { book ->
+                        BookListItem(book) {
+                            navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
+                        }
                     }
                 }
             }
