@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "917555271389",
+    "project_id": "narria-book-app",
+    "storage_bucket": "narria-book-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917555271389:android:1fd90434570c49f03cad34",
+        "android_client_info": {
+          "package_name": "edu.rit.ks4898.narria"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4U0XYxf0E64RkwtZNUuPOX6f1LbMMOoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
