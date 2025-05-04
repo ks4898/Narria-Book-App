@@ -55,7 +55,8 @@ fun SearchScreen(navController: NavHostController, modifier: Modifier = Modifier
                     showError = false
                 },
                 label = { Text("Search by title or author") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true
             )
 
             IconButton(
@@ -84,7 +85,8 @@ fun SearchScreen(navController: NavHostController, modifier: Modifier = Modifier
                             }
                         }
                     }
-                }
+                },
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
             }

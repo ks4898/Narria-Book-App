@@ -3,6 +3,7 @@ package edu.rit.ks4898.narria
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -32,12 +34,21 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun BookCover(coverUrl: String, modifier: Modifier = Modifier) {
-    AsyncImage(
-        model = coverUrl.ifEmpty { "https://via.placeholder.com/150" },
-        contentDescription = "Book Cover",
-        contentScale = ContentScale.Crop,
-        modifier = modifier.clip(RoundedCornerShape(4.dp))
-    )
+    if (coverUrl.isBlank()) {
+        Image(
+            painter = painterResource(id = R.drawable.placeholder),
+            contentDescription = "Book Cover",
+            modifier = modifier.clip(RoundedCornerShape(4.dp)),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        AsyncImage(
+            model = coverUrl,
+            contentDescription = "Book Cover",
+            modifier = modifier.clip(RoundedCornerShape(4.dp)),
+            contentScale = ContentScale.Crop
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

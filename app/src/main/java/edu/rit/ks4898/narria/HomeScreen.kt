@@ -3,16 +3,13 @@ package edu.rit.ks4898.narria
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -29,7 +30,6 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // ─────────────────── Load user’s books ───────────────────
     LaunchedEffect(Unit) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             try {
@@ -50,7 +50,6 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
         }
     }
 
-    // ─────────────────────── UI ───────────────────────
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -60,50 +59,83 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
         Spacer(Modifier.height(16.dp))
 
         when {
-            isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+            isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                CircularProgressIndicator()
+            }
 
             books.isEmpty() -> EmptyState(
                 message = "Your library is empty.\nAdd a book from the Search tab!",
-                icon    = Icons.Filled.Book
+                icon = Icons.Filled.Book
             )
 
             else -> LazyColumn {
                 item { CategorySection("Reading Now", books.filter { it.readingStatus == "Reading" }, navController) }
-                item { CategorySection("To Read",      books.filter { it.readingStatus == "To-Read" },  navController) }
-                item { CategorySection("Completed",     books.filter { it.readingStatus == "Completed" },navController) }
+                item { CategorySection("To Read", books.filter { it.readingStatus == "To-Read" }, navController) }
+                item { CategorySection("Completed", books.filter { it.readingStatus == "Completed" }, navController) }
             }
         }
     }
 }
 
-// ---------- Small helper composable for each carousel ----------
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun CategorySection(
     title: String,
     books: List<Book>,
     navController: NavHostController
 ) {
+    var bookList by remember { mutableStateOf(books) }
+
     Text(title, style = MaterialTheme.typography.titleLarge)
 
-    if (books.isEmpty()) {
+    if (bookList.isEmpty()) {
         InlineCardEmptyState(
             message = "No books in this category",
-            icon = Icons.Default.Bookmarks
+            icon = Icons.Filled.Bookmarks
         )
     } else {
         LazyRow {
-            items(books) { book ->
-                BookCard(
-                    book = book,
-                    onClick = {
-                        navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
-                    },
-                    onRemove = {
-                        removeBook(book)
-                    }
-                )
-            }
+            itemsIndexed(bookList, key = { _, book -> book.id }) { index, book ->
+                var dismissed by remember { mutableStateOf(false) }
 
+                if (!dismissed) {
+                    SwipeToDismiss(
+                        state = rememberDismissState(
+                            confirmStateChange = {
+                                if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                                    dismissed = true
+                                    removeBook(book)
+                                    // Remove book from local list
+                                    bookList = bookList.toMutableList().also { it.remove(book) }
+                                    true
+                                } else false
+                            }
+                        ),
+                        background = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.Red
+                                )
+                            }
+                        },
+                        directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart)
+                    ) {
+                        BookCard(
+                            book = book,
+                            onClick = {
+                                navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -113,8 +145,7 @@ private fun CategorySection(
 @Composable
 fun BookCard(
     book: Book,
-    onClick: () -> Unit,
-    onRemove: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -123,54 +154,34 @@ fun BookCard(
             .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Box {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(8.dp)
-            ) {
-                BookCover(
-                    coverUrl = book.coverUrl,
-                    modifier = Modifier
-                        .height(160.dp)
-                        .fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(book.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(4.dp))
-                Text(book.author, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(4.dp))
-
-                StarRating(rating = book.rating, starSize = 16.dp)
-
-                if (book.isFavorite) {
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Favorite",
-                        tint = Color.Red,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(4.dp)
-                    )
-                }
-            }
-
-            // ───────────────────────────────────────────────────
-            // NEW: X REMOVE BUTTON (TOP RIGHT)
-            IconButton(
-                onClick = onRemove,
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            BookCover(
+                coverUrl = book.coverUrl,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-            ) {
+                    .height(160.dp)
+                    .fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(book.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(book.author, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+
+            StarRating(rating = book.rating, starSize = 16.dp)
+
+            if (book.isFavorite) {
                 Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove Book",
-                    tint = Color.Gray
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Favorite",
+                    tint = Color.Red,
+                    modifier = Modifier.padding(4.dp)
                 )
             }
-            // ───────────────────────────────────────────────────
         }
     }
 }
@@ -184,4 +195,3 @@ private fun removeBook(book: Book) {
         .document(book.id)
         .delete()
 }
-
