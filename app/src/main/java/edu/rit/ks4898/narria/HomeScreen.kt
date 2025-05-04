@@ -84,7 +84,7 @@ private fun CategorySection(
     Text(title, style = MaterialTheme.typography.titleLarge)
 
     if (books.isEmpty()) {
-        InlineEmptyState(
+        InlineCardEmptyState(
             message = "No books in this category",
             icon = Icons.Default.Bookmarks
         )
