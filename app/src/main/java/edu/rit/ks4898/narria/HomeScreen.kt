@@ -128,14 +128,7 @@ fun BookCard(book: Book, onClick: () -> Unit) {
             Spacer(Modifier.height(4.dp))
 
             Row {
-                repeat(5) { i ->
-                    Icon(
-                        imageVector = if (i < book.rating / 2) Icons.Filled.Star else Icons.Outlined.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+                StarRating(book.rating)
             }
             if (book.isFavorite) {
                 Icon(
