@@ -1,14 +1,12 @@
 package edu.rit.ks4898.narria
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,120 +24,105 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(key1 = true) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        if (userId != null) {
+    // ——————————————————————————————————————————— Load user’s books
+    LaunchedEffect(Unit) {
+        FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             try {
                 val snapshot = FirebaseFirestore.getInstance()
                     .collection("users")
-                    .document(userId)
+                    .document(uid)
                     .collection("books")
                     .get()
                     .await()
 
-                val booksList = snapshot.documents.mapNotNull { doc ->
+                books = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Book::class.java)?.copy(
                         id = doc.id,
                         bookId = doc.getString("bookId") ?: ""
                     )
                 }
-
-                books = booksList
-                isLoading = false
-            } catch (e: Exception) {
+            } finally {
                 isLoading = false
             }
         }
     }
 
+    // ——————————————————————————————————————————— UI
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "My Books",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Text("My Books", style = MaterialTheme.typography.headlineMedium)
 
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (books.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No books added yet. Search for books to add them.")
-            }
-        } else {
-            LazyColumn {
-                item {
-                    Text(
-                        text = "Reading Now",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+        Spacer(Modifier.height(16.dp))
 
-                    val readingBooks = books.filter { it.readingStatus == "Reading" }
-                    if (readingBooks.isEmpty()) {
-                        Text("No books in this category")
-                    } else {
-                        LazyRow {
-                            items(readingBooks) { book ->
-                                BookCard(book = book) {
-                                    navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
-                                }
-                            }
-                        }
-                    }
+        when {
+            isLoading -> {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "To Read",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    val toReadBooks = books.filter { it.readingStatus == "To-Read" }
-                    if (toReadBooks.isEmpty()) {
-                        Text("No books in this category")
-                    } else {
-                        LazyRow {
-                            items(toReadBooks) { book ->
-                                BookCard(book = book) {
-                                    navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
-                                }
-                            }
-                        }
+            }
+            books.isEmpty() -> {
+                EmptyState(
+                    message = "Your library is empty.\nAdd a book from the Search tab!",
+                    icon   = Icons.Default.Search
+                )
+            }
+            else -> {
+                // Existing list/row sections  ……………………………………………………………
+                LazyColumn {
+                    item {
+                        Section(
+                            title = "Reading Now",
+                            books = books.filter { it.readingStatus == "Reading" },
+                            navController = navController
+                        )
                     }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Completed",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    val completedBooks = books.filter { it.readingStatus == "Completed" }
-                    if (completedBooks.isEmpty()) {
-                        Text("No books in this category")
-                    } else {
-                        LazyRow {
-                            items(completedBooks) { book ->
-                                BookCard(book = book) {
-                                    navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
-                                }
-                            }
-                        }
+                    item {
+                        Section(
+                            title = "To Read",
+                            books = books.filter { it.readingStatus == "To-Read" },
+                            navController = navController
+                        )
+                    }
+                    item {
+                        Section(
+                            title = "Completed",
+                            books = books.filter { it.readingStatus == "Completed" },
+                            navController = navController
+                        )
                     }
                 }
             }
         }
     }
+}
+
+// ---------- helper composable for the three carousel sections ----------
+@Composable
+private fun Section(
+    title: String,
+    books: List<Book>,
+    navController: NavHostController
+) {
+    Text(title, style = MaterialTheme.typography.titleLarge)
+    if (books.isEmpty()) {
+        Text(
+            "No books in this category",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+    } else {
+        LazyRow {
+            items(books) { book ->
+                BookCard(book) {
+                    navController.navigate("bookDetail/${book.id}/${book.isFavorite}")
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(16.dp))
 }
 
 @Composable
