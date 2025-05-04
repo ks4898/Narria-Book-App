@@ -136,14 +136,26 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(text = currentBook.title, style = MaterialTheme.typography.headlineSmall)
-                        Text(text = currentBook.author, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = currentBook.title,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp)) // ← added space
+
+                        Text(
+                            text = currentBook.author,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp)) // ← added space before rating
+
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             StarRating(currentBook.rating, starSize = 32.dp)
                             Spacer(Modifier.width(8.dp))
                         }
-
                     }
+
                 }
 
                 Text("Description", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
