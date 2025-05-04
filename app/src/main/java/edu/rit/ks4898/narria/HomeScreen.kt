@@ -5,8 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +26,7 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // ——————————————————————————————————————————— Load user’s books
+    // ─────────────────── Load user’s books ───────────────────
     LaunchedEffect(Unit) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             try {
@@ -41,67 +43,39 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) 
                         bookId = doc.getString("bookId") ?: ""
                     )
                 }
-            } finally {
-                isLoading = false
-            }
+            } finally { isLoading = false }
         }
     }
 
-    // ——————————————————————————————————————————— UI
+    // ─────────────────────── UI ───────────────────────
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         Text("My Books", style = MaterialTheme.typography.headlineMedium)
-
         Spacer(Modifier.height(16.dp))
 
         when {
-            isLoading -> {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            books.isEmpty() -> {
-                EmptyState(
-                    message = "Your library is empty.\nAdd a book from the Search tab!",
-                    icon   = Icons.Default.Search
-                )
-            }
-            else -> {
-                // Existing list/row sections  ……………………………………………………………
-                LazyColumn {
-                    item {
-                        Section(
-                            title = "Reading Now",
-                            books = books.filter { it.readingStatus == "Reading" },
-                            navController = navController
-                        )
-                    }
-                    item {
-                        Section(
-                            title = "To Read",
-                            books = books.filter { it.readingStatus == "To-Read" },
-                            navController = navController
-                        )
-                    }
-                    item {
-                        Section(
-                            title = "Completed",
-                            books = books.filter { it.readingStatus == "Completed" },
-                            navController = navController
-                        )
-                    }
-                }
+            isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+
+            books.isEmpty() -> EmptyState(
+                message = "Your library is empty.\nAdd a book from the Search tab!",
+                icon    = Icons.Filled.Book
+            )
+
+            else -> LazyColumn {
+                item { CategorySection("Reading Now", books.filter { it.readingStatus == "Reading" }, navController) }
+                item { CategorySection("To Read",      books.filter { it.readingStatus == "To-Read" },  navController) }
+                item { CategorySection("Completed",     books.filter { it.readingStatus == "Completed" },navController) }
             }
         }
     }
 }
 
-// ---------- helper composable for the three carousel sections ----------
+// ---------- Small helper composable for each carousel ----------
 @Composable
-private fun Section(
+private fun CategorySection(
     title: String,
     books: List<Book>,
     navController: NavHostController
@@ -109,7 +83,7 @@ private fun Section(
     Text(title, style = MaterialTheme.typography.titleLarge)
     if (books.isEmpty()) {
         Text(
-            "No books in this category",
+            text = "No books in this category",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(vertical = 8.dp)
         )
@@ -125,6 +99,7 @@ private fun Section(
     Spacer(Modifier.height(16.dp))
 }
 
+// ---------- BookCard (unchanged) ----------
 @Composable
 fun BookCard(book: Book, onClick: () -> Unit) {
     Card(
@@ -132,14 +107,9 @@ fun BookCard(book: Book, onClick: () -> Unit) {
         modifier = Modifier
             .width(160.dp)
             .padding(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
             BookCover(
                 coverUrl = book.coverUrl,
                 modifier = Modifier
@@ -147,35 +117,28 @@ fun BookCard(book: Book, onClick: () -> Unit) {
                     .fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = book.title,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = book.author,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
+            Text(book.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(book.author, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
 
             Row {
-                StarRating(book.rating)
+                repeat(5) { i ->
+                    Icon(
+                        imageVector = if (i < book.rating / 2) Icons.Filled.Star else Icons.Outlined.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
-
             if (book.isFavorite) {
                 Icon(
-                    imageVector = Icons.Filled.Favorite,
+                    imageVector = Icons.Filled.Star,
                     contentDescription = "Favorite",
-                    tint = Color.Red,
+                    tint = Color.Yellow,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(4.dp)

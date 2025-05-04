@@ -18,7 +18,7 @@ import com.google.firebase.ktx.Firebase
 fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     var favoriteBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
 
-    // ——————————————————————————————————————————— Listen for favorites
+    // ───────────────── Listen for favourite changes ─────────────────
     LaunchedEffect(Unit) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             Firebase.firestore
@@ -26,15 +26,15 @@ fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modif
                 .document(uid)
                 .collection("books")
                 .whereEqualTo("isFavorite", true)
-                .addSnapshotListener { snapshot, _ ->
-                    favoriteBooks = snapshot?.documents?.mapNotNull { doc ->
-                        doc.toObject(Book::class.java)?.copy(id = doc.id)
+                .addSnapshotListener { snap, _ ->
+                    favoriteBooks = snap?.documents?.mapNotNull { d ->
+                        d.toObject(Book::class.java)?.copy(id = d.id)
                     } ?: emptyList()
                 }
         }
     }
 
-    // ——————————————————————————————————————————— UI
+    // ───────────────── UI ─────────────────
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -46,7 +46,7 @@ fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modif
         if (favoriteBooks.isEmpty()) {
             EmptyState(
                 message = "You haven't marked any books as favorites yet.",
-                icon = Icons.Default.Favorite
+                icon    = Icons.Filled.Favorite
             )
         } else {
             LazyColumn {
