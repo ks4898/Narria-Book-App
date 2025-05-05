@@ -1,11 +1,13 @@
 package edu.rit.ks4898.narria
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,7 +21,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -59,11 +60,21 @@ fun LoginScreen(
             )
 
             if (errorMessage.isNotEmpty()) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
             }
 
             Button(
@@ -77,7 +88,7 @@ fun LoginScreen(
                             if (task.isSuccessful) {
                                 onLoginSuccess()
                             } else {
-                                errorMessage = task.exception?.message ?: "Login failed"
+                                errorMessage = "Login failed, please check your\n credentials and try again."
                             }
                         }
                 },
@@ -158,11 +169,21 @@ fun RegisterScreen(
             )
 
             if (errorMessage.isNotEmpty()) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
             }
 
             Button(
@@ -188,7 +209,7 @@ fun RegisterScreen(
                                             if (dbTask.isSuccessful) {
                                                 onRegisterSuccess()
                                             } else {
-                                                errorMessage = dbTask.exception?.message ?: "Failed to save user data"
+                                                errorMessage = "Couldn't register, please try again."
                                             }
                                         }
                                 } else {
