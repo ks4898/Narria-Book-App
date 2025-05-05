@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,27 +30,30 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import coil.request.ImageRequest
 
 @Composable
 fun BookCover(coverUrl: String, modifier: Modifier = Modifier) {
-    if (coverUrl.isBlank()) {
-        Image(
-            painter = painterResource(id = R.drawable.placeholder),
-            contentDescription = "Book Cover",
-            modifier = modifier.clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        AsyncImage(
-            model = coverUrl,
-            contentDescription = "Book Cover",
-            modifier = modifier.clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
-        )
-    }
+    val isDark = isSystemInDarkTheme()
+
+    val painter = rememberAsyncImagePainter(
+        model = coverUrl.takeIf { it.isNotBlank() },
+        placeholder = painterResource(id = if (isDark) R.drawable.placeholder_dark else R.drawable.placeholder),
+        error = painterResource(id = if (isDark) R.drawable.placeholder_dark else R.drawable.placeholder),
+    )
+
+    Image(
+        painter = painter,
+        contentDescription = "Book Cover",
+        contentScale = ContentScale.Crop,
+        modifier = modifier.clip(RoundedCornerShape(4.dp))
+    )
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,21 +97,19 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            userId?.let { uid ->
-                                val newFavorite = !isFavorite
-                                isFavorite = newFavorite
+                    IconButton(onClick = {
+                        userId?.let { uid ->
+                            val newFavorite = !isFavorite
+                            isFavorite = newFavorite
 
-                                FirebaseFirestore.getInstance()
-                                    .collection("users")
-                                    .document(uid)
-                                    .collection("books")
-                                    .document(bookId)
-                                    .update("isFavorite", newFavorite)
-                            }
+                            FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(uid)
+                                .collection("books")
+                                .document(bookId)
+                                .update("isFavorite", newFavorite)
                         }
-                    ) {
+                    }) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Favorite",
@@ -115,13 +117,11 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            book?.let {
-                                shareBook(context, it.copy(description = it.description.ifEmpty { "No description available" }))
-                            }
+                    IconButton(onClick = {
+                        book?.let {
+                            shareBook(context, it.copy(description = it.description.ifEmpty { "No description available" }))
                         }
-                    ) {
+                    }) {
                         Icon(Icons.Default.Share, "Share")
                     }
                 }
@@ -147,45 +147,27 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(
-                            text = currentBook.title,
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp)) // ← added space
-
-                        Text(
-                            text = currentBook.author,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp)) // ← added space before rating
-
+                        Text(currentBook.title, style = MaterialTheme.typography.headlineSmall)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(currentBook.author, style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             StarRating(currentBook.rating, starSize = 32.dp)
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
                     }
-
                 }
 
                 Text("Description", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
                 Text(currentBook.description.ifEmpty { "No description available" }, style = MaterialTheme.typography.bodyMedium)
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text("Reading Status", style = MaterialTheme.typography.titleLarge)
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    ReadingStatusButton("To-Read", currentBook.readingStatus == "To-Read") {
-                        updateReadingStatus(bookId, "To-Read")
-                    }
-                    ReadingStatusButton("Reading", currentBook.readingStatus == "Reading") {
-                        updateReadingStatus(bookId, "Reading")
-                    }
-                    ReadingStatusButton("Completed", currentBook.readingStatus == "Completed") {
-                        updateReadingStatus(bookId, "Completed")
-                    }
+                    ReadingStatusButton("To-Read", currentBook.readingStatus == "To-Read") { updateReadingStatus(bookId, "To-Read") }
+                    ReadingStatusButton("Reading", currentBook.readingStatus == "Reading") { updateReadingStatus(bookId, "Reading") }
+                    ReadingStatusButton("Completed", currentBook.readingStatus == "Completed") { updateReadingStatus(bookId, "Completed") }
                 }
             } ?: run {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -242,14 +224,13 @@ fun BookListItem(book: Book, onClick: () -> Unit) {
             BookCover(coverUrl = book.coverUrl, modifier = Modifier.height(100.dp).width(70.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = book.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = book.author, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(book.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(book.author, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row {
                     StarRating(book.rating, starSize = 16.dp)
                 }
-                Text(text = "Status: ${book.readingStatus}", style = MaterialTheme.typography.bodySmall)
+                Text("Status: ${book.readingStatus}", style = MaterialTheme.typography.bodySmall)
             }
-
             if (book.isFavorite) {
                 Icon(imageVector = Icons.Filled.Favorite, contentDescription = "Favorite", tint = Color.Red, modifier = Modifier.padding(4.dp))
             }
