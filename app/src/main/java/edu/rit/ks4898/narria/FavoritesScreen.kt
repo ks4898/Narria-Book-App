@@ -18,9 +18,8 @@ import com.google.firebase.ktx.Firebase
 @Composable
 fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     var favoriteBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) } // ✅ NEW loading state
+    var isLoading by remember { mutableStateOf(true) }
 
-    // ───────────────── Listen for favourite changes ─────────────────
     LaunchedEffect(Unit) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             Firebase.firestore
@@ -33,14 +32,13 @@ fun FavoritesScreen(navController: NavHostController, modifier: Modifier = Modif
                         d.toObject(Book::class.java)?.copy(id = d.id)
                     } ?: emptyList()
 
-                    isLoading = false  // ✅ Set loading complete
+                    isLoading = false
                 }
         } ?: run {
-            isLoading = false // ✅ No user, stop loading
+            isLoading = false
         }
     }
 
-    // ───────────────── UI ─────────────────
     Column(
         modifier = modifier
             .fillMaxSize()

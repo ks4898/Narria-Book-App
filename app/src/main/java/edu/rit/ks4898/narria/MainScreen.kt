@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun MainScreen(
@@ -25,13 +24,12 @@ fun MainScreen(
     var selectedItem by remember { mutableStateOf(items[0]) }
 
     Scaffold(
+
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.height(92.dp)
             ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
 
                 items.forEach { screen ->
                     NavigationBarItem(

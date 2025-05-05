@@ -12,19 +12,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/**
- * Re-usable component that shows a centred card with an icon & message.
- */
 @Composable
 fun EmptyState(
+    modifier: Modifier = Modifier,
     message: String,
-    icon: ImageVector = Icons.Default.Info,
-    modifier: Modifier = Modifier
+    icon: ImageVector = Icons.Default.Info
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),            // keeps card off the edges
+            .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Card(

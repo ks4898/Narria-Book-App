@@ -3,17 +3,14 @@ package edu.rit.ks4898.narria
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -110,7 +106,7 @@ private fun CategorySection(
                     visible = !dismissed,
                     exit = fadeOut()
                 ) {
-                    BookCardWithDelete(
+                    BookCardItem(
                         book = book,
                         onClick = { navController.navigate("bookDetail/${book.id}/${book.isFavorite}") },
                         onDeleteConfirmed = {
@@ -129,7 +125,7 @@ private fun CategorySection(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BookCardWithDelete(
+fun BookCardItem(
     book: Book,
     onClick: () -> Unit,
     onDeleteConfirmed: () -> Unit

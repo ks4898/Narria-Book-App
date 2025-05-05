@@ -16,11 +16,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // Get the initial values outside of remember
             val initialDarkTheme = isSystemInDarkTheme()
             val initialLoginState = FirebaseAuth.getInstance().currentUser != null
 
-            // Use the initial values in remember
             val darkThemeEnabled = remember { mutableStateOf(initialDarkTheme) }
             val isLoggedIn = remember { mutableStateOf(initialLoginState) }
 

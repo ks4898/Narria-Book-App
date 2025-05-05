@@ -2,7 +2,6 @@ package edu.rit.ks4898.narria
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -29,21 +28,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import coil.request.ImageRequest
 
 @Composable
 fun BookCover(coverUrl: String, modifier: Modifier = Modifier) {
     val isDark = isSystemInDarkTheme()
-
     val painter = rememberAsyncImagePainter(
         model = coverUrl.takeIf { it.isNotBlank() },
         placeholder = painterResource(id = if (isDark) R.drawable.placeholder_dark else R.drawable.placeholder),
-        error = painterResource(id = if (isDark) R.drawable.placeholder_dark else R.drawable.placeholder),
+        error = painterResource(id = if (isDark) R.drawable.placeholder_dark else R.drawable.placeholder)
     )
 
     Image(
@@ -53,7 +48,6 @@ fun BookCover(coverUrl: String, modifier: Modifier = Modifier) {
         modifier = modifier.clip(RoundedCornerShape(4.dp))
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,12 +65,7 @@ fun BookDetailScreen(bookId: String, initialIsFavorite: Boolean, navController: 
                 .document(userId)
                 .collection("books")
                 .document(bookId)
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        Log.e("BookDetail", "Listen failed", error)
-                        return@addSnapshotListener
-                    }
-
+                .addSnapshotListener { snapshot, _ ->
                     val bookData = snapshot?.toObject(Book::class.java)?.copy(id = snapshot.id)
                     book = bookData
 
